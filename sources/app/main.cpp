@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <iostream>
 #include <string>
+#include <web_crawler_lib.hpp>
 
 namespace web_crawler_app {
     namespace program_options = ::boost::program_options;
@@ -16,7 +17,7 @@ namespace web_crawler_app {
     constexpr char const* OUTPUT_OPTION_NAME = "parser_threads";
 
     //<editor-fold dec="Initializer of PROGRAM_OPTIONS_DESCRIPTION" defaultstate ="collapsed">
-    static program_options::options_description create_program_options_description_() {
+    static program_options::options_description create_program_options_description_() noexcept {
         program_options::options_description description{"Options"};
 
         //@formatter:off (just weird Boost syntax)
@@ -48,6 +49,43 @@ int main(int const arguments_count, char const* const arguments[]) {
 
         return 0;
     }
+
+    ::std::string url;
+    if (!program_options.count(web_crawler_app::HELP_OPTION_NAME)) {
+        ::std::cerr << "Missing option " << web_crawler_app::DEPTH_OPTION_NAME << ::std::endl;
+        return 1;
+    }
+    url = program_options[web_crawler_app::URL_OPTION_NAME].as<::std::string>();
+
+    ::std::size_t depth;
+    if (!program_options.count(web_crawler_app::DEPTH_OPTION_NAME)) {
+        ::std::cerr << "Missing option " << web_crawler_app::DEPTH_OPTION_NAME << ::std::endl;
+        return 1;
+    }
+    depth = program_options[web_crawler_app::DEPTH_OPTION_NAME].as<::std::size_t>();
+
+    ::std::size_t network_threads;
+    if (!program_options.count(web_crawler_app::NETWORK_THREADS_OPTION_NAME)) {
+        ::std::cerr << "Missing option " << web_crawler_app::NETWORK_THREADS_OPTION_NAME << ::std::endl;
+        return 1;
+    }
+    network_threads = program_options[web_crawler_app::NETWORK_THREADS_OPTION_NAME].as<::std::size_t>();
+
+    ::std::size_t parser_threads;
+    if (!program_options.count(web_crawler_app::PARSER_THREADS_OPTION_NAME)) {
+        ::std::cerr << "Missing option " << web_crawler_app::PARSER_THREADS_OPTION_NAME << ::std::endl;
+        return 1;
+    }
+    parser_threads = program_options[web_crawler_app::PARSER_THREADS_OPTION_NAME].as<::std::size_t>();
+
+    ::std::string output;
+    if (!program_options.count(web_crawler_app::OUTPUT_OPTION_NAME)) {
+        ::std::cerr << "Missing option " << web_crawler_app::OUTPUT_OPTION_NAME << ::std::endl;
+        return 1;
+    }
+    output = program_options[web_crawler_app::OUTPUT_OPTION_NAME].as<::std::string>();
+
+    web_crawler_lib::WebCrawler::from(url, depth, network_threads, parser_threads, output).join();
 }
 
 namespace web_crawler_app {
