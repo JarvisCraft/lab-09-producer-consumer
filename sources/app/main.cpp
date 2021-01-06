@@ -14,26 +14,26 @@ namespace web_crawler_app {
     constexpr char const* DEPTH_OPTION_NAME = "depth";
     constexpr char const* NETWORK_THREADS_OPTION_NAME = "network_threads";
     constexpr char const* PARSER_THREADS_OPTION_NAME = "parser_threads";
-    constexpr char const* OUTPUT_OPTION_NAME = "parser_threads";
+    constexpr char const* OUTPUT_OPTION_NAME = "output";
 
     //<editor-fold dec="Initializer of PROGRAM_OPTIONS_DESCRIPTION" defaultstate ="collapsed">
     static program_options::options_description create_program_options_description_() noexcept {
         program_options::options_description description{"Options"};
 
+        using program_options::value;
         //@formatter:off (just weird Boost syntax)
         description.add_options()
             (HELP_OPTION_NAME, "Shows this help message")
-            (URL_OPTION_NAME, program_options::value<::std::string>(), "HTML page address")
-            (DEPTH_OPTION_NAME, program_options::value<::std::size_t>(), "Page search depth")
-            (NETWORK_THREADS_OPTION_NAME, program_options::value<::std::size_t>(), "Number of downloader-threads")
-            (PARSER_THREADS_OPTION_NAME, program_options::value<::std::size_t>(), "Number of parser-threads")
-            // FIXME: file path
-            (OUTPUT_OPTION_NAME, program_options::value<::std::string>(), "Path to output file")
+            (URL_OPTION_NAME, value<::std::string>(), "HTML page address")
+            (DEPTH_OPTION_NAME, value<::std::size_t>()->default_value(0), "Page search depth")
+            (NETWORK_THREADS_OPTION_NAME, value<::std::size_t>()->default_value(0), "Number of downloader-threads")
+            (PARSER_THREADS_OPTION_NAME, value<::std::size_t>()->default_value(0), "Number of parser-threads")
+            (OUTPUT_OPTION_NAME, value<::std::string>(), "Path to output file")
             ;
+        //</editor-fold>
 
         return description;
     }
-    //</editor-fold>
 
     auto const PROGRAM_OPTIONS_DESCRIPTION = create_program_options_description_();
 
@@ -51,32 +51,15 @@ int main(int const arguments_count, char const* const arguments[]) {
     }
 
     ::std::string url;
-    if (!program_options.count(web_crawler_app::HELP_OPTION_NAME)) {
-        ::std::cerr << "Missing option " << web_crawler_app::DEPTH_OPTION_NAME << ::std::endl;
+    if (!program_options.count(web_crawler_app::URL_OPTION_NAME)) {
+        ::std::cerr << "Missing option " << web_crawler_app::URL_OPTION_NAME << ::std::endl;
         return 1;
     }
     url = program_options[web_crawler_app::URL_OPTION_NAME].as<::std::string>();
 
-    ::std::size_t depth;
-    if (!program_options.count(web_crawler_app::DEPTH_OPTION_NAME)) {
-        ::std::cerr << "Missing option " << web_crawler_app::DEPTH_OPTION_NAME << ::std::endl;
-        return 1;
-    }
-    depth = program_options[web_crawler_app::DEPTH_OPTION_NAME].as<::std::size_t>();
-
-    ::std::size_t network_threads;
-    if (!program_options.count(web_crawler_app::NETWORK_THREADS_OPTION_NAME)) {
-        ::std::cerr << "Missing option " << web_crawler_app::NETWORK_THREADS_OPTION_NAME << ::std::endl;
-        return 1;
-    }
-    network_threads = program_options[web_crawler_app::NETWORK_THREADS_OPTION_NAME].as<::std::size_t>();
-
-    ::std::size_t parser_threads;
-    if (!program_options.count(web_crawler_app::PARSER_THREADS_OPTION_NAME)) {
-        ::std::cerr << "Missing option " << web_crawler_app::PARSER_THREADS_OPTION_NAME << ::std::endl;
-        return 1;
-    }
-    parser_threads = program_options[web_crawler_app::PARSER_THREADS_OPTION_NAME].as<::std::size_t>();
+    auto const depth = program_options[web_crawler_app::DEPTH_OPTION_NAME].as<::std::size_t>();
+    auto const network_threads = program_options[web_crawler_app::NETWORK_THREADS_OPTION_NAME].as<::std::size_t>();
+    auto const parser_threads = program_options[web_crawler_app::PARSER_THREADS_OPTION_NAME].as<::std::size_t>();
 
     ::std::string output;
     if (!program_options.count(web_crawler_app::OUTPUT_OPTION_NAME)) {
