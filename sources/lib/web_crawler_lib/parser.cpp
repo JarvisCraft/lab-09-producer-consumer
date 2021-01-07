@@ -2,25 +2,38 @@
 
 #include <gumbo.h>
 
-#include <memory>
 #include <web_crawler_lib/parser.hpp>
 
 namespace web_crawler_lib {
 
     static ::std::set<::std::string> find_elements_recursive_(GumboNode const* node /* raw non-owned pointer */,
-                                                                 GumboTag tag, char const* name);
+                                                              GumboTag tag, char const* name);
+
+    struct GuardedGumboOutput {
+        //<editor-fold desc="RAII-guard implementation" defaultstate="collapsed">
+        GumboOutput* const guarded;
+
+        ~GuardedGumboOutput() {
+            if (guarded) gumbo_destroy_output(&kGumboDefaultOptions, guarded);
+        }
+
+        typename ::std::add_lvalue_reference<GumboOutput>::type operator*() const { return *guarded; }
+
+        GumboOutput* operator->() const noexcept { return guarded; }
+        //</editor-fold>
+    };
 
     ParsingResult parse_http_response(const http_response_t& response, bool const parse_children) {
         // ensure RAII-safety for raw pointer provided by a C-only library
-        ::std::unique_ptr<GumboOutput> parsed{gumbo_parse(response.body().c_str())};
+        GuardedGumboOutput parsed{gumbo_parse(response.body().c_str())};
 
-        return ParsingResult{find_elements_recursive_(parsed->root, GUMBO_TAG_IMG, "src"),
-                             parse_children ? find_elements_recursive_(parsed->root, GUMBO_TAG_A, "href")
-                                            : ::std::set<::std::string>{}};
+        return ParsingResult{
+            find_elements_recursive_(parsed->root, GUMBO_TAG_IMG, "src"),
+            parse_children ? find_elements_recursive_(parsed->root, GUMBO_TAG_A, "href") : ::std::set<::std::string>{}};
     }
 
     ::std::set<::std::string> find_elements_recursive_(GumboNode const* const node, GumboTag const tag,
-                                                          char const* const name) {
+                                                       char const* const name) {
         if (node->type != GUMBO_NODE_ELEMENT) return {};
 
         ::std::set<::std::string> references;
