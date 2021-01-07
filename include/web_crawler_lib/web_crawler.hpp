@@ -14,7 +14,7 @@
 
 namespace web_crawler_lib {
 
-    class WebCrawler {
+    class WebCrawler final {
     public:
         /**
          * @brief Awaits for this crawler to end its job.
@@ -74,19 +74,10 @@ namespace web_crawler_lib {
 
         void notify_finish_job_();
 
-        /**
-         * @brief Unsafely writes the given string to the output. This does not provide any concurrency guarantees.
-         * @param value value to be written into the output
-         */
-        void unsafe_write_to_output(::std::string const& value);
-
         void publish_network_job(NetworkJob&& job);
 
         void publish_parser_job(ParserJob&& job);
 
         void publish_writer_job(::std::string&& job);
-
-        // single worker only
-        void writer_worker();
     };
 } // namespace web_crawler_lib

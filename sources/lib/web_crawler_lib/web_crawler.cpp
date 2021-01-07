@@ -13,10 +13,30 @@ namespace web_crawler_lib {
           output_{output_file_name},
           network_workers_{network_workers},
           parser_workers_{parser_workers},
-          writer_worker_{[this] {
-              while (active_jobs_) { writer_worker(); }
-          }} {
+          writer_worker_{} {
         publish_network_job({root_url, 0});
+        // the task is passed ot `writer_worker_` only after the network job is published so that
+        // it does not complete too early (i.e. if false notification happens before `active_jobs_` becomes non-0)
+        writer_worker_ = ::std::thread{[this] {
+          while (true /* break used inside */) {
+              ::std::unique_lock lock{writer_queue_mutex_};
+              bool has_more_jobs;
+              // join(!empty || jobs == 0) ~ while (!(!empty || jobs == 0)) ~ while (empty && jobs != 0)
+              while (writer_queue_.empty() && (has_more_jobs = (active_jobs_ != 0))) {
+                  writer_queue_cv_.wait(lock);
+              }
+              // here <=> (!writer_queue_.empty() XOR !has_more_jobs)
+              if (!has_more_jobs) break; // there is nothing more to process and nothing will appear
+              // get data under lock
+              auto const result = writer_queue_.front();
+              writer_queue_.pop();
+              lock.unlock();
+              // no need to write under lock as it does not influence mutex-protected data
+              output_ << result << ::std::endl;
+
+              notify_finish_job_();
+          }
+        }};
     }
 
     void WebCrawler::join() {
@@ -35,21 +55,6 @@ namespace web_crawler_lib {
         return WebCrawler{depth, url, network_threads == 0 ? ::std::thread::hardware_concurrency() : network_threads,
                           parser_threads == 0 ? ::std::thread::hardware_concurrency() : parser_threads,
                           output_file_name};
-    }
-
-    void WebCrawler::unsafe_write_to_output(std::string const& value) { output_ << value << ::std::endl; }
-
-    void WebCrawler::writer_worker() {
-        ::std::unique_lock lock{writer_queue_mutex_};
-        writer_queue_cv_.wait(lock, [this] { return !writer_queue_.empty(); });
-        // get data under lock
-        auto const result = writer_queue_.front();
-        writer_queue_.pop();
-        lock.unlock();
-        // don't write under lock as there should only be single writer
-        unsafe_write_to_output(result);
-
-        notify_finish_job_();
     }
 
     void WebCrawler::publish_network_job(NetworkJob&& job) {
@@ -84,6 +89,7 @@ namespace web_crawler_lib {
 
     void WebCrawler::publish_writer_job(::std::string&& job) {
         notify_start_job_();
+
         ::std::lock_guard lock{writer_queue_mutex_};
         writer_queue_.push(::std::move(job));
         writer_queue_cv_.notify_one();
@@ -97,7 +103,7 @@ namespace web_crawler_lib {
 
     void WebCrawler::notify_finish_job_() {
         ::std::lock_guard lock{active_jobs_mutex_};
-        --active_jobs_;
+        if (--active_jobs_ == 0) writer_queue_cv_.notify_one(); // this notification is required to shutdown
         active_jobs_cv_.notify_all();
     }
 } // namespace web_crawler_lib

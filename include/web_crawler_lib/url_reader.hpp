@@ -20,7 +20,7 @@ namespace web_crawler_lib {
     /**
      * @brief Service responsible for reading data via HTTP.
      */
-    class UrlReader {
+    class UrlReader final {
     public:
         /// Response type.
         using response_t = http::response<http::string_body>;
