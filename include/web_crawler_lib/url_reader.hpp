@@ -10,6 +10,9 @@
 
 namespace web_crawler_lib {
 
+    /// Response type.
+    using http_response_t = http::response<http::string_body>;
+
     /**
      * @brief Gets the parts of the given URL, i.e. host and target.
      * @param url HTTP-URL whose parts should be resolved
@@ -17,15 +20,6 @@ namespace web_crawler_lib {
      */
     ::std::optional<::std::pair<::std::string, ::std::string>> parse_url_parts(std::string const& url);
 
-    /**
-     * @brief Service responsible for reading data via HTTP.
-     */
-    class UrlReader final {
-    public:
-        /// Response type.
-        using response_t = http::response<http::string_body>;
-
-        [[nodiscard]] ::std::optional<response_t> read(::std::string const& host, ::std::string const& port,
-                                                       ::std::string const& target) const;
-    };
+    [[nodiscard]] ::std::optional<http_response_t> read_from_url(::std::string const& host, ::std::string const& port,
+                                                                 ::std::string const& target);
 } // namespace web_crawler_lib

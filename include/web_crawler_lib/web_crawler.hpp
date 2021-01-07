@@ -38,9 +38,7 @@ namespace web_crawler_lib {
         // Generic configuration
         const ::std::size_t max_depth_;
 
-        // Services
-        UrlReader url_reader_;
-        WebPageParser parser_;
+        // Service
         ::std::ofstream output_;
 
         // Threads
@@ -58,7 +56,7 @@ namespace web_crawler_lib {
         };
 
         struct ParserJob {
-            UrlReader::response_t response;
+            http_response_t response;
             ::std::size_t depth;
         };
 

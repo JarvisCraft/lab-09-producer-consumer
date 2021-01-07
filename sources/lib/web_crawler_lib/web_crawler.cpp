@@ -8,8 +8,6 @@ namespace web_crawler_lib {
                            ::std::size_t const network_workers, ::std::size_t const parser_workers,
                            ::std::string const& output_file_name)
         : max_depth_{max_depth},
-          url_reader_{},
-          parser_{},
           output_{output_file_name},
           network_workers_{network_workers},
           parser_workers_{parser_workers},
@@ -18,24 +16,22 @@ namespace web_crawler_lib {
         // the task is passed ot `writer_worker_` only after the network job is published so that
         // it does not complete too early (i.e. if false notification happens before `active_jobs_` becomes non-0)
         writer_worker_ = ::std::thread{[this] {
-          while (true /* break used inside */) {
-              ::std::unique_lock lock{writer_queue_mutex_};
-              bool has_more_jobs;
-              // join(!empty || jobs == 0) ~ while (!(!empty || jobs == 0)) ~ while (empty && jobs != 0)
-              while (writer_queue_.empty() && (has_more_jobs = (active_jobs_ != 0))) {
-                  writer_queue_cv_.wait(lock);
-              }
-              // here <=> (!writer_queue_.empty() XOR !has_more_jobs)
-              if (!has_more_jobs) break; // there is nothing more to process and nothing will appear
-              // get data under lock
-              auto const result = writer_queue_.front();
-              writer_queue_.pop();
-              lock.unlock();
-              // no need to write under lock as it does not influence mutex-protected data
-              output_ << result << ::std::endl;
+            while (true /* break used inside */) {
+                ::std::unique_lock lock{writer_queue_mutex_};
+                bool has_more_jobs;
+                // join(!empty || jobs == 0) ~ while (!(!empty || jobs == 0)) ~ while (empty && jobs != 0)
+                while (writer_queue_.empty() && (has_more_jobs = (active_jobs_ != 0))) { writer_queue_cv_.wait(lock); }
+                // here <=> (!writer_queue_.empty() XOR !has_more_jobs)
+                if (!has_more_jobs) break; // there is nothing more to process and nothing will appear
+                // get data under lock
+                auto const result = writer_queue_.front();
+                writer_queue_.pop();
+                lock.unlock();
+                // no need to write under lock as it does not influence mutex-protected data
+                output_ << result << ::std::endl;
 
-              notify_finish_job_();
-          }
+                notify_finish_job_();
+            }
         }};
     }
 
@@ -63,8 +59,8 @@ namespace web_crawler_lib {
         asio::post(network_workers_, [this, job] {
             auto const url_parts = parse_url_parts(job.url);
             if (url_parts) {
-                auto response = url_reader_.read(url_parts->first, "80" /* default port */, url_parts->second);
-                if (response) publish_parser_job({::std::move(*response), job.depth});
+                if (auto response = read_from_url(url_parts->first, "80" /* default port */, url_parts->second))
+                    publish_parser_job({::std::move(*response), job.depth});
             }
 
             notify_finish_job_();
@@ -76,7 +72,7 @@ namespace web_crawler_lib {
 
         asio::post(parser_workers_, [this, job] {
             auto const children = job.depth < max_depth_;
-            auto result = parser_.parse(job.response, children);
+            auto result = parse_http_response(job.response, children);
             for (auto image_url : result.image_urls) publish_writer_job(::std::move(image_url));
             if (children) {
                 auto const next_depth = job.depth + 1;

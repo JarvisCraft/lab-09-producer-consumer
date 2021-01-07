@@ -10,7 +10,7 @@ namespace web_crawler_lib {
     static ::std::vector<::std::string> find_elements_recursive_(GumboNode const* node /* raw non-owned pointer */,
                                                                  GumboTag tag, char const* name);
 
-    ParsingResult WebPageParser::parse(const UrlReader::response_t& response, bool const parse_children) {
+    ParsingResult parse_http_response(const http_response_t& response, bool const parse_children) {
         // ensure RAII-safety for raw pointer provided by a C-only library
         ::std::unique_ptr<GumboOutput> parsed{gumbo_parse(response.body().c_str())};
 

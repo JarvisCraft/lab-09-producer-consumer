@@ -18,14 +18,11 @@ namespace web_crawler_lib {
         /// URLs to children
         ::std::vector<::std::string> child_urls; // may be empty
     };
-
-    class WebPageParser final {
-    public:
-        /**
-         * @brief Parses the given response.
-         * @param response response which should be parsed
-         * @return result of parsing
-         */
-        [[nodiscard]] ParsingResult parse(UrlReader::response_t const& response, bool parse_children);
-    };
+    /**
+     * @brief Parses the given response.
+     *
+     * @param response response which should be parsed
+     * @return result of parsing
+     */
+    [[nodiscard]] ParsingResult parse_http_response(http_response_t const& response, bool parse_children);
 } // namespace web_crawler_lib
