@@ -16,7 +16,7 @@ namespace web_crawler_app {
     constexpr char const* PARSER_THREADS_OPTION_NAME = "parser_threads";
     constexpr char const* OUTPUT_OPTION_NAME = "output";
 
-    //<editor-fold dec="Initializer of PROGRAM_OPTIONS_DESCRIPTION" defaultstate ="collapsed">
+    //<editor-fold desc="Initializer of PROGRAM_OPTIONS_DESCRIPTION" defaultstate ="collapsed">
     static program_options::options_description create_program_options_description_() noexcept {
         program_options::options_description description{"Options"};
 
