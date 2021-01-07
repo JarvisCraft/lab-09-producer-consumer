@@ -1,11 +1,11 @@
 // Copyright 2020 Petr Portnov me@progrm-jarvis.ru
 
-#ifndef INCLUDE_DEFINITIONS_HPP_
-#define INCLUDE_DEFINITIONS_HPP_
+#pragma once
 
 #include <boost/asio.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
+#include <cstddef>
 
 namespace web_crawler_lib {
 
@@ -14,5 +14,3 @@ namespace web_crawler_lib {
     namespace beast = ::boost::beast;
     namespace http = beast::http;
 } // namespace web_crawler_lib
-
-#endif // INCLUDE_DEFINITIONS_HPP_

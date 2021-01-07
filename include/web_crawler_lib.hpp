@@ -1,9 +1,8 @@
 // Copyright 2020 Petr Portnov me@progrm-jarvis.ru
 
-#ifndef WEB_CRAWLER_LIB_HPP_
-#define WEB_CRAWLER_LIB_HPP_
+#pragma once
 
 #include <web_crawler_lib/definitions.hpp>
+#include <web_crawler_lib/parser.hpp>
+#include <web_crawler_lib/url_reader.hpp>
 #include <web_crawler_lib/web_crawler.hpp>
-
-#endif // WEB_CRAWLER_LIB_HPP_
