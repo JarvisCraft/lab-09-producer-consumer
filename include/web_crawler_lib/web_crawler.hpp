@@ -48,49 +48,31 @@ namespace web_crawler_lib {
         asio::thread_pool parser_workers_;
         ::std::thread writer_worker_;
 
-        // FIXME
-        ::std::atomic_size_t active_jobs_ = 1;
+        ::std::atomic_size_t active_jobs_ = 0;
+        ::std::mutex active_jobs_mutex_{};
+        ::std::condition_variable active_jobs_cv_{};
 
         struct NetworkJob {
             ::std::string url;
             ::std::size_t depth;
         };
 
-        ::std::queue<NetworkJob> network_queue_;
-        mutable ::std::mutex network_queue_mutex_;
-        ::std::condition_variable network_queue_cv_;
-
         struct ParserJob {
             UrlReader::response_t response;
             ::std::size_t depth;
         };
 
-        ::std::queue<ParserJob> parser_queue_;
-        mutable ::std::mutex parser_queue_mutex_;
-        ::std::condition_variable parser_queue_cv_;
-
-        ::std::queue<::std::string> writer_queue_;
-        mutable ::std::mutex writer_queue_mutex_;
-        ::std::condition_variable writer_queue_cv_;
+        ::std::queue<::std::string> writer_queue_{};
+        ::std::mutex writer_queue_mutex_{};
+        ::std::condition_variable writer_queue_cv_{};
 
         // default-initializes members yet not starting anything
-        WebCrawler(::std::size_t max_depth, ::std::string const& root_url, ::std::size_t const network_workers,
-                   ::std::size_t const parser_workers, ::std::string const& output_file_name)
-            : max_depth_{max_depth},
-              url_reader_{},
-              parser_{},
-              output_{output_file_name},
-              network_workers_{network_workers},
-              parser_workers_{parser_workers},
-              writer_worker_{[this] {
-                  while (active_jobs_) { writer_worker(); }
-              }} {
-            for (size_t i = 0; i < network_workers; ++i) asio::post(network_workers_, [this] { network_worker(); });
-            for (size_t i = 0; i < parser_workers; ++i) asio::post(parser_workers_, [this] { parser_worker(); });
-            publish_network_job({root_url, 0});
-        }
+        WebCrawler(::std::size_t max_depth, ::std::string const& root_url, ::std::size_t network_workers,
+                   ::std::size_t parser_workers, ::std::string const& output_file_name);
 
-        // Service users
+        void notify_start_job_();
+
+        void notify_finish_job_();
 
         /**
          * @brief Unsafely writes the given string to the output. This does not provide any concurrency guarantees.
@@ -103,12 +85,6 @@ namespace web_crawler_lib {
         void publish_parser_job(ParserJob&& job);
 
         void publish_writer_job(::std::string&& job);
-
-        // Worker bodies
-
-        void network_worker();
-
-        void parser_worker();
 
         // single worker only
         void writer_worker();

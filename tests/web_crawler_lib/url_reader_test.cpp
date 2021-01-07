@@ -12,12 +12,20 @@ namespace web_crawler_lib {
         EXPECT_EQ(::std::make_optional(::std::make_pair(::std::string("github.com"), ::std::string("/JarvisCraft"))),
                   parse_url_parts("http://github.com/JarvisCraft"));
         EXPECT_EQ(::std::make_optional(::std::make_pair(::std::string("github.com"), ::std::string("/"))),
-                  parse_url_parts("http://github.com/"));
+                  parse_url_parts("http://github.com"));
         EXPECT_EQ(::std::make_optional(::std::make_pair(::std::string("github.com"), ::std::string("/"))),
                   parse_url_parts("github.com/"));
         EXPECT_EQ(::std::make_optional(::std::make_pair(::std::string("github.com"), ::std::string("/JarvisCraft"))),
                   parse_url_parts("github.com/JarvisCraft"));
         EXPECT_EQ(::std::make_optional(::std::make_pair(::std::string("github.com"), ::std::string("/"))),
-                  parse_url_parts("github.com/"));
+                  parse_url_parts("github.com"));
     }
 } // namespace web_crawler_lib
+
+::std::ostream & operator<<(::std::ostream &out, ::std::optional<::std::pair<::std::string, ::std::string>> x) {
+    if (x) {
+        return out << "{\"" << x->first << "\", \"" << x->second << "\"}";
+    } else {
+        return  out << "{}";
+    }
+}
