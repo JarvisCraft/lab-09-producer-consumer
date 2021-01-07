@@ -2,8 +2,9 @@
 
 #pragma once
 
+#include <iostream>
+#include <set>
 #include <string>
-#include <vector>
 #include <web_crawler_lib/parser.hpp>
 #include <web_crawler_lib/url_reader.hpp>
 
@@ -14,10 +15,15 @@ namespace web_crawler_lib {
      */
     struct ParsingResult {
         /// URLs to the images
-        ::std::vector<::std::string> image_urls;
+        ::std::set<::std::string> image_urls;
         /// URLs to children
-        ::std::vector<::std::string> child_urls; // may be empty
+        ::std::set<::std::string> child_urls;
+
+        [[nodiscard]] bool operator ==(ParsingResult const& other) const;
     };
+
+    ::std::ostream &operator<<(::std::ostream &out, ParsingResult const& result);
+
     /**
      * @brief Parses the given response.
      *
