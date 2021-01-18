@@ -5,7 +5,6 @@
 #include <iostream>
 #include <set>
 #include <string>
-#include <web_crawler_lib/parser.hpp>
 #include <web_crawler_lib/url_reader.hpp>
 
 namespace web_crawler_lib {
