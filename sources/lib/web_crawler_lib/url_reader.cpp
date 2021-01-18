@@ -5,7 +5,7 @@
 namespace web_crawler_lib {
 
     ::std::optional<::std::pair<::std::string, ::std::string>> parse_url_parts(std::string const& url) {
-        size_t begin_offset;
+        size_t begin_offset = 0;
         { // in case of protocol being specified check if it is `http`
             auto const protocol_delimiter = url.find("://");
             if (protocol_delimiter != ::std::string::npos) {
@@ -13,9 +13,7 @@ namespace web_crawler_lib {
                 // 0123456
                 if (url.substr(0, protocol_delimiter) != "http") return ::std::nullopt;
                 begin_offset = 7;
-            } else {
-                begin_offset = 0;
-            }
+            } 
         }
 
         auto const path_delimiter_index = url.find('/', begin_offset);
