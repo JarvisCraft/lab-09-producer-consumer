@@ -11,7 +11,7 @@ namespace web_crawler_lib {
             if (protocol_delimiter != ::std::string::npos) {
                 // http://
                 // 0123456
-                if (protocol_delimiter != 4 || url.substr(0, 4) != "http") return ::std::nullopt;
+                if (url.substr(0, protocol_delimiter) != "http") return ::std::nullopt;
                 begin_offset = 7;
             } else {
                 begin_offset = 0;
