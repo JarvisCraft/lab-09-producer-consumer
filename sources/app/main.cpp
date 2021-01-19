@@ -49,24 +49,22 @@ int main(int const arguments_count, char const* const arguments[]) {
 
         return 0;
     }
-
-    ::std::string url;
+    
     if (!program_options.count(web_crawler_app::URL_OPTION_NAME)) {
         ::std::cerr << "Missing option " << web_crawler_app::URL_OPTION_NAME << ::std::endl;
         return 1;
-    }
-    url = program_options[web_crawler_app::URL_OPTION_NAME].as<::std::string>();
-
-    auto const depth = program_options[web_crawler_app::DEPTH_OPTION_NAME].as<::std::size_t>();
-    auto const network_threads = program_options[web_crawler_app::NETWORK_THREADS_OPTION_NAME].as<::std::size_t>();
-    auto const parser_threads = program_options[web_crawler_app::PARSER_THREADS_OPTION_NAME].as<::std::size_t>();
-
-    ::std::string output;
+    }    
+    
     if (!program_options.count(web_crawler_app::OUTPUT_OPTION_NAME)) {
         ::std::cerr << "Missing option " << web_crawler_app::OUTPUT_OPTION_NAME << ::std::endl;
         return 1;
     }
-    output = program_options[web_crawler_app::OUTPUT_OPTION_NAME].as<::std::string>();
+    
+    ::std::string url = program_options[web_crawler_app::URL_OPTION_NAME].as<::std::string>();
+    ::std::string output = program_options[web_crawler_app::OUTPUT_OPTION_NAME].as<::std::string>();
+    auto const depth = program_options[web_crawler_app::DEPTH_OPTION_NAME].as<::std::size_t>();
+    auto const network_threads = program_options[web_crawler_app::NETWORK_THREADS_OPTION_NAME].as<::std::size_t>();
+    auto const parser_threads = program_options[web_crawler_app::PARSER_THREADS_OPTION_NAME].as<::std::size_t>();
 
     web_crawler_lib::WebCrawler::from(url, depth, network_threads, parser_threads, output).join();
 }
